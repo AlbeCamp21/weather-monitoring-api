@@ -35,7 +35,11 @@ services:
     environment:
       # Variables de entorno para la aplicación
       DATABASE_URL: postgresql://weather_user:weather_password@db:5432/weather_monitoring
-      API_KEY: ${API_KEY:-your_api_key_here}
+      OPENWEATHER_API_KEY: ${API_KEY:-your_api_key_here}
+      DB_HOST: db
+      DB_NAME: weather_monitoring
+      DB_USER: weather_user
+      DB_PASSWORD: weather_password
       CITY: ${CITY:-Lima}
       UNITS: ${UNITS:-metric}
       ENV: production

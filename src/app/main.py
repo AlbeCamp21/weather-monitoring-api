@@ -10,9 +10,9 @@ app = FastAPI(title="Weather Monitoring API", version="1.0.0")
 def get_db_connection():
     return psycopg2.connect(
         host=os.getenv("DB_HOST", "db"),
-        database=os.getenv("DB_NAME", "weather_db"),
+        database=os.getenv("DB_NAME", "weather_monitoring"),
         user=os.getenv("DB_USER", "weather_user"),
-        password=os.getenv("DB_PASSWORD", "weather_pass")
+        password=os.getenv("DB_PASSWORD", "weather_password")
     )
 
 @app.get("/")
