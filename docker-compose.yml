@@ -1,0 +1,71 @@
+services:
+  # Servicio de la base de datos PostgreSQL
+  db:
+    build:
+      context: ./src/db
+      target: production
+    container_name: weather_db
+    environment:
+      POSTGRES_DB: weather_monitoring
+      POSTGRES_USER: weather_user
+      POSTGRES_PASSWORD: weather_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      # Volumen persistente para los datos de la base de datos
+      - postgres_data:/var/lib/postgresql/data
+      # Scripts de inicialización
+      - ./src/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5433:5432"
+    networks:
+      - weather_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U weather_user -d weather_monitoring"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Servicio de la aplicación FastAPI
+  app:
+    build:
+      context: .
+      dockerfile: src/app/Dockerfile
+    container_name: weather_api
+    environment:
+      # Variables de entorno para la aplicación
+      DATABASE_URL: postgresql://weather_user:weather_password@db:5432/weather_monitoring
+      API_KEY: ${API_KEY:-your_api_key_here}
+      CITY: ${CITY:-Lima}
+      UNITS: ${UNITS:-metric}
+      ENV: production
+    ports:
+      - "8000:8000"
+    # volumes:
+      # Montaje para desarrollo (opcional, comentado para producción)
+      # - ./src/app:/app
+    networks:
+      - weather_network
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# Definición de volúmenes persistentes
+volumes:
+  postgres_data:
+    driver: local
+
+# Definición de redes internas
+networks:
+  weather_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
